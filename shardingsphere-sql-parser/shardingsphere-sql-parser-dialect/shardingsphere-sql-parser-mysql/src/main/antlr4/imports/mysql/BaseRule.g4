@@ -154,7 +154,7 @@ variable
     ;
 
 scope
-    : GLOBAL | PERSIST | PERSIST_ONLY | SESSION | LOCAL
+    : GLOBAL | PERSIST | PERSIST_ONLY | SESSION | LOCAL | NEW
     ;
 
 schemaName
@@ -604,11 +604,11 @@ fieldOrVarSpec
     ;
 
 notExistClause_
-    : (IF NOT EXISTS)?
+    : IF NOT EXISTS
     ;
 
 existClause_
-    : (IF EXISTS)?
+    : IF EXISTS
     ;
 
 pattern

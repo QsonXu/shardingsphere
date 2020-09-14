@@ -89,6 +89,14 @@ public enum VisitorRule {
     ALTER_SERVER("AlterServer", SQLStatementType.DDL),
 
     DROP_SERVER("DropServer", SQLStatementType.DDL),
+
+    CREATE_TRIGGER("CreateTrigger", SQLStatementType.DDL),
+
+    DROP_TRIGGER("DropTrigger", SQLStatementType.DDL),
+    
+    CREATE_VIEW("CreateView", SQLStatementType.DDL),
+    
+    DROP_VIEW("DropView", SQLStatementType.DDL),
     
     SET_TRANSACTION("SetTransaction", SQLStatementType.TCL),
     

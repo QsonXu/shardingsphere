@@ -28,10 +28,10 @@ import org.apache.shardingsphere.db.protocol.payload.PacketPayload;
 import org.apache.shardingsphere.infra.hook.RootInvokeHook;
 import org.apache.shardingsphere.infra.hook.SPIRootInvokeHook;
 import org.apache.shardingsphere.proxy.backend.communication.jdbc.connection.BackendConnection;
-import org.apache.shardingsphere.proxy.backend.communication.jdbc.connection.ConnectionStateHandler;
-import org.apache.shardingsphere.proxy.frontend.api.CommandExecutor;
-import org.apache.shardingsphere.proxy.frontend.api.QueryCommandExecutor;
-import org.apache.shardingsphere.proxy.frontend.engine.CommandExecuteEngine;
+import org.apache.shardingsphere.proxy.backend.communication.jdbc.connection.status.ConnectionStatusManager;
+import org.apache.shardingsphere.proxy.frontend.command.executor.CommandExecutor;
+import org.apache.shardingsphere.proxy.frontend.command.executor.QueryCommandExecutor;
+import org.apache.shardingsphere.proxy.frontend.exception.ExpectedExceptions;
 import org.apache.shardingsphere.proxy.frontend.spi.DatabaseProtocolFrontendEngine;
 
 import java.sql.SQLException;
@@ -67,18 +67,20 @@ public final class CommandExecutorTask implements Runnable {
         boolean isNeedFlush = false;
         try (BackendConnection backendConnection = this.backendConnection;
              PacketPayload payload = databaseProtocolFrontendEngine.getCodecEngine().createPacketPayload((ByteBuf) message)) {
-            ConnectionStateHandler stateHandler = backendConnection.getStateHandler();
-            stateHandler.waitUntilConnectionReleasedIfNecessary();
-            stateHandler.setRunningStatusIfNecessary();
+            ConnectionStatusManager statusManager = backendConnection.getConnectionStatusManager();
+            statusManager.waitUntilConnectionReleasedIfNecessary();
+            statusManager.switchToUsing();
             isNeedFlush = executeCommand(context, payload, backendConnection);
             connectionSize = backendConnection.getConnectionSize();
             // CHECKSTYLE:OFF
         } catch (final Exception ex) {
             // CHECKSTYLE:ON
-            log.error("Exception occur: ", ex);
             context.writeAndFlush(databaseProtocolFrontendEngine.getCommandExecuteEngine().getErrorPacket(ex));
             Optional<DatabasePacket<?>> databasePacket = databaseProtocolFrontendEngine.getCommandExecuteEngine().getOtherPacket();
             databasePacket.ifPresent(context::writeAndFlush);
+            if (!ExpectedExceptions.isExpected(ex.getClass())) {
+                log.error("Exception occur: ", ex);
+            }
         } finally {
             if (isNeedFlush) {
                 context.flush();

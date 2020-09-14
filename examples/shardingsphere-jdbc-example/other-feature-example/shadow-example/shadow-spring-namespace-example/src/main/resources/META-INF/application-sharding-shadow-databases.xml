@@ -76,7 +76,7 @@
 
     <sharding:sharding-algorithm id="inlineStrategyShardingAlgorithm" type="INLINE">
         <props>
-            <prop key="algorithm.expression">ds_${user_id % 2}</prop>
+            <prop key="algorithm-expression">ds_${user_id % 2}</prop>
         </props>
     </sharding:sharding-algorithm>
 
@@ -89,7 +89,7 @@
 
     <shardingsphere:data-source id="shardingShadowDataSource" data-source-names="ds_0,ds_1,shadow_ds_0,shadow_ds_1" rule-refs="shadowRule,shardingRule">
         <props>
-            <prop key="sql.show">true</prop>
+            <prop key="sql-show">true</prop>
         </props>
     </shardingsphere:data-source>
     

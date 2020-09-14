@@ -21,26 +21,28 @@ import com.google.common.collect.ImmutableMap;
 import lombok.SneakyThrows;
 import org.apache.shardingsphere.infra.auth.Authentication;
 import org.apache.shardingsphere.infra.config.properties.ConfigurationProperties;
+import org.apache.shardingsphere.infra.config.properties.ConfigurationPropertyKey;
 import org.apache.shardingsphere.infra.context.SchemaContext;
+import org.apache.shardingsphere.infra.context.SchemaContexts;
 import org.apache.shardingsphere.infra.context.impl.StandardSchemaContexts;
 import org.apache.shardingsphere.infra.context.schema.ShardingSphereSchema;
 import org.apache.shardingsphere.infra.database.type.dialect.MySQLDatabaseType;
 import org.apache.shardingsphere.infra.hint.HintManager;
 import org.apache.shardingsphere.infra.metadata.ShardingSphereMetaData;
-import org.apache.shardingsphere.infra.metadata.datasource.DataSourceMetas;
+import org.apache.shardingsphere.infra.metadata.datasource.DataSourceMetaDatas;
 import org.apache.shardingsphere.infra.metadata.schema.RuleSchemaMetaData;
 import org.apache.shardingsphere.proxy.backend.communication.jdbc.connection.BackendConnection;
+import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
 import org.apache.shardingsphere.proxy.backend.response.BackendResponse;
-import org.apache.shardingsphere.proxy.backend.response.error.ErrorResponse;
 import org.apache.shardingsphere.proxy.backend.response.query.QueryData;
 import org.apache.shardingsphere.proxy.backend.response.query.QueryResponse;
 import org.apache.shardingsphere.proxy.backend.response.update.UpdateResponse;
-import org.apache.shardingsphere.proxy.backend.schema.ProxySchemaContexts;
 import org.apache.shardingsphere.proxy.backend.text.sctl.exception.InvalidShardingCTLFormatException;
 import org.apache.shardingsphere.proxy.backend.text.sctl.exception.UnsupportedShardingCTLTypeException;
 import org.apache.shardingsphere.proxy.backend.text.sctl.hint.internal.HintManagerHolder;
 import org.apache.shardingsphere.sql.parser.binder.metadata.schema.SchemaMetaData;
 import org.apache.shardingsphere.sql.parser.binder.metadata.table.TableMetaData;
+import org.apache.shardingsphere.transaction.context.TransactionContexts;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,6 +61,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -70,21 +73,16 @@ public final class ShardingCTLHintBackendHandlerTest {
     
     @Before
     public void setUp() {
-        when(backendConnection.isSupportHint()).thenReturn(true);
+        SchemaContexts schemaContexts = mock(SchemaContexts.class, RETURNS_DEEP_STUBS);
+        when(schemaContexts.getProps().getValue(ConfigurationPropertyKey.PROXY_HINT_ENABLED)).thenReturn(true);
+        ProxyContext.getInstance().init(schemaContexts, mock(TransactionContexts.class));
     }
     
-    @Test(expected = UnsupportedOperationException.class)
-    public void assertNotSupportHint() {
-        when(backendConnection.isSupportHint()).thenReturn(false);
-        new ShardingCTLHintBackendHandler("", backendConnection).execute();
-    }
-    
-    @Test
+    @Test(expected = InvalidShardingCTLFormatException.class)
     public void assertInvalidShardingCTLFormat() {
         clearThreadLocal();
         String sql = "sctl:hint1 xx=yy";
-        ShardingCTLHintBackendHandler shardingCTLHintBackendHandler = new ShardingCTLHintBackendHandler(sql, backendConnection);
-        assertThat(((ErrorResponse) shardingCTLHintBackendHandler.execute()).getCause(), instanceOf(InvalidShardingCTLFormatException.class));
+        new ShardingCTLHintBackendHandler(sql, backendConnection).execute();
     }
     
     private void clearThreadLocal() {
@@ -171,11 +169,13 @@ public final class ShardingCTLHintBackendHandlerTest {
     @SneakyThrows(ReflectiveOperationException.class)
     public void assertShowTableStatus() throws SQLException {
         clearThreadLocal();
-        when(backendConnection.getSchema()).thenReturn("schema");
-        Field schemaContexts = ProxySchemaContexts.getInstance().getClass().getDeclaredField("schemaContexts");
+        when(backendConnection.getSchemaName()).thenReturn("schema");
+        Field schemaContexts = ProxyContext.getInstance().getClass().getDeclaredField("schemaContexts");
         schemaContexts.setAccessible(true);
-        schemaContexts.set(ProxySchemaContexts.getInstance(),
-                new StandardSchemaContexts(getSchemaContextMap(), new Authentication(), new ConfigurationProperties(new Properties()), new MySQLDatabaseType()));
+        Properties props = new Properties();
+        props.setProperty(ConfigurationPropertyKey.PROXY_HINT_ENABLED.getKey(), Boolean.TRUE.toString());
+        schemaContexts.set(ProxyContext.getInstance(),
+                new StandardSchemaContexts(getSchemaContextMap(), new Authentication(), new ConfigurationProperties(props), new MySQLDatabaseType()));
         String sql = "sctl:hint show table status";
         ShardingCTLHintBackendHandler defaultShardingCTLHintBackendHandler = new ShardingCTLHintBackendHandler(sql, backendConnection);
         BackendResponse backendResponse = defaultShardingCTLHintBackendHandler.execute();
@@ -210,15 +210,15 @@ public final class ShardingCTLHintBackendHandlerTest {
         ShardingSphereSchema shardingSphereSchema = mock(ShardingSphereSchema.class);
         when(result.getSchema()).thenReturn(shardingSphereSchema);
         when(shardingSphereSchema.getMetaData()).thenReturn(
-                new ShardingSphereMetaData(mock(DataSourceMetas.class), new RuleSchemaMetaData(new SchemaMetaData(ImmutableMap.of("user", mock(TableMetaData.class))), Collections.emptyMap())));
+                new ShardingSphereMetaData(mock(DataSourceMetaDatas.class), new RuleSchemaMetaData(new SchemaMetaData(ImmutableMap.of("user", mock(TableMetaData.class))), Collections.emptyMap()),
+                        "sharding_db"));
         return Collections.singletonMap("schema", result);
     }
     
-    @Test
+    @Test(expected = UnsupportedShardingCTLTypeException.class)
     public void assertUnsupportedShardingCTLType() {
         clearThreadLocal();
         String sql = "sctl:hint xx=yy";
-        ShardingCTLHintBackendHandler shardingCTLHintBackendHandler = new ShardingCTLHintBackendHandler(sql, backendConnection);
-        assertThat(((ErrorResponse) shardingCTLHintBackendHandler.execute()).getCause(), instanceOf(UnsupportedShardingCTLTypeException.class));
+        new ShardingCTLHintBackendHandler(sql, backendConnection).execute();
     }
 }

@@ -48,7 +48,7 @@
     
     <encrypt:encrypt-algorithm id="name_encryptor" type="AES">
         <props>
-            <prop key="aes.key.value">123456</prop>
+            <prop key="aes-key-value">123456</prop>
         </props>
     </encrypt:encrypt-algorithm>
     <encrypt:encrypt-algorithm id="pwd_encryptor" type="MD5" />
@@ -62,7 +62,7 @@
     
     <shardingsphere:data-source id="realEncryptDataSource" data-source-names="dbtbl_0" rule-refs="encryptRule">
         <props>
-            <prop key="query.with.cipher.column">true</prop>
+            <prop key="query-with-cipher-column">true</prop>
         </props>
     </shardingsphere:data-source>
     

@@ -13,7 +13,7 @@ Please register [here](https://github.com/apache/shardingsphere/issues/234) with
 
 ## Who are using ShardingSphere?
 
-Total: 143 companies.
+Total: 147 companies.
 
 ### Financial Industry
 <ul>
@@ -35,6 +35,7 @@ Total: 143 companies.
     <li><a href="https://www.kjtpay.com/" rel="nofollow">KJT pay</a></li>
     <li><a href="https://www.ktjr.com/" rel="nofollow">KTJR</a></li>
     <li><a href="https://www.tansun.com/" rel="nofollow">TANSUN</a></li>
+    <li><a href="https://www.360jinrong.net/" rel="nofollow">360jinrong</a></li>
 </ul>
 
 ### E-commerce
@@ -74,6 +75,7 @@ Total: 143 companies.
     <li><a href="https://www.shebaotong.com/" rel="nofollow">SheBaoTong</a></li>
     <li><a href="https://www.itrus.com.cn/" rel="nofollow">ITrusChina</a></li>
     <li><a href="http://www.dtchuxing.com/" rel="nofollow">Bus Cloud</a></li>
+    <li><a href="http://www.ushareit.com/" rel="nofollow">shareit</a></li>
 </ul>
 
 ### Transportation
@@ -177,6 +179,7 @@ Total: 143 companies.
     <li><a href="https://www.hikvision.com/" rel="nofollow">Hikvision</a></li>
     <li><a href="http://www.jtkjbike.com/" rel="nofollow">JTKJBike</a></li>
     <li><a href="http://www.iotlead.com/" rel="nofollow">Century Lead</a></li>
+    <li><a href=" http://tcslwxwl.cn.b2b168.com/" rel="nofollow">Shenzhou Shanglong Technology Co.,Ltd </a></li>
 </ul>
 
 
@@ -217,6 +220,7 @@ Total: 143 companies.
     <li><a href="https://www.zyhealth.com/" rel="nofollow">ZYHealth</a></li>
     <li><a href="https://www.ddky.com/" rel="nofollow">DDKY</a></li>
     <li><a href="https://www.keep.com/">Keep</a></li>
+    <li><a href="http://www.dxy.cn/">dxy</a></li>
 </ul>
 
 <img src="https://shardingsphere.apache.org/community/image/powered-by.png" width = "30%" height = "30%" align="right" alt="Powered By ShardingSphere" />

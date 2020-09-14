@@ -33,6 +33,7 @@ import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.expr.Expressi
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.expr.subquery.SubquerySegment;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.table.SimpleTableSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.statement.dml.InsertStatement;
+import org.apache.shardingsphere.sql.parser.sql.common.util.TableExtractUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,7 +87,7 @@ public final class InsertStatementContext extends CommonSQLStatementContext<Inse
         for (Collection<ExpressionSegment> each : getSqlStatement().getAllValueExpressions()) {
             InsertValueContext insertValueContext = new InsertValueContext(each, parameters, parametersOffset.get());
             result.add(insertValueContext);
-            parametersOffset.addAndGet(insertValueContext.getParametersCount());
+            parametersOffset.addAndGet(insertValueContext.getParameterCount());
         }
         return result;
     }
@@ -98,7 +99,7 @@ public final class InsertStatementContext extends CommonSQLStatementContext<Inse
         SubquerySegment insertSelectSegment = getSqlStatement().getInsertSelect().get();
         SelectStatementContext selectStatementContext = new SelectStatementContext(schemaMetaData, parameters, insertSelectSegment.getSelect());
         InsertSelectContext insertSelectContext = new InsertSelectContext(selectStatementContext, parameters, parametersOffset.get());
-        parametersOffset.addAndGet(insertSelectContext.getParametersCount());
+        parametersOffset.addAndGet(insertSelectContext.getParameterCount());
         return Optional.of(insertSelectContext);
     }
     
@@ -108,7 +109,7 @@ public final class InsertStatementContext extends CommonSQLStatementContext<Inse
         }
         Collection<AssignmentSegment> onDuplicateKeyColumns = getSqlStatement().getOnDuplicateKeyColumns().get().getColumns();
         OnDuplicateUpdateContext onDuplicateUpdateContext = new OnDuplicateUpdateContext(onDuplicateKeyColumns, parameters, parametersOffset.get());
-        parametersOffset.addAndGet(onDuplicateUpdateContext.getParametersCount());
+        parametersOffset.addAndGet(onDuplicateUpdateContext.getParameterCount());
         return Optional.of(onDuplicateUpdateContext);
     }
     
@@ -160,6 +161,8 @@ public final class InsertStatementContext extends CommonSQLStatementContext<Inse
     
     @Override
     public Collection<SimpleTableSegment> getAllTables() {
-        return tablesContext.getTables();
+        TableExtractUtils utils = new TableExtractUtils();
+        utils.extractTablesFromInsert(getSqlStatement());
+        return utils.getRewriteTables();
     }
 }
